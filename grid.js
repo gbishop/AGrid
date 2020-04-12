@@ -1,3 +1,4 @@
+import Reef from "./reef.js";
 Reef.debug(true);
 
 const data = {
@@ -20,11 +21,14 @@ const data = {
   selected: 0
 };
 
+/** @typedef {typeof data} Props */
+
 const app = new Reef(".page", {
   data: data,
+  /** @param {Props} props */
   template: props => {
-    document.body.style.setProperty("--nrows", props.height);
-    document.body.style.setProperty("--ncols", props.width);
+    document.body.style.setProperty("--nrows", "" + props.height);
+    document.body.style.setProperty("--ncols", "" + props.width);
     var html = "";
     props.words.forEach((word, index) => {
       html += `<div class="symbol">
@@ -52,12 +56,12 @@ document.addEventListener("keydown", e => {
   }
 });
 document.addEventListener("render", e => {
-  if (e.target.matches(".page")) {
+  if (e.target instanceof HTMLElement && e.target.matches(".page")) {
     console.log("render", e);
     const symbols = document.querySelectorAll("div.symbol");
     const data = app.getData();
     setTimeout(() => {
-      symbols.forEach((symbol, i) => {
+      symbols.forEach((/** @type {HTMLElement} */ symbol, i) => {
         if (i === data.selected) {
           const box = symbol.getBoundingClientRect();
           console.log("box", box);
@@ -70,11 +74,11 @@ document.addEventListener("render", e => {
           const t = `translate(${tx}px, ${ty}px) scale(${scale}, ${scale})`;
           symbol.style.transform = t;
           symbol.style.transformOrigin = "top left";
-          symbol.style.zIndex = 10;
+          symbol.style.zIndex = "10";
           symbol.style.transition = "transform 0.5s ease-in-out 0.2s";
         } else {
           symbol.style.transform = "";
-          symbol.style.zIndex = 1;
+          symbol.style.zIndex = "1";
         }
       });
     }, 100);

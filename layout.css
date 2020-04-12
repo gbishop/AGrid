@@ -1,0 +1,56 @@
+body {
+  --nrows: 4;
+  --ncols: 3;
+  --spad: 2vw;
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.page {
+  display: grid;
+  grid-template-columns: repeat(var(--ncols), minmax(10px, 1fr));
+  grid-auto-rows: calc(100vh / var(--nrows));
+  width: 100vw;
+  height: 100vh;
+}
+
+.symbol {
+  padding: 1vw;
+  align-self: center;
+  justify-self: center;
+  background: white;
+}
+
+.symbol img,
+.symbol video {
+  max-height: calc(100vh / var(--nrows) - var(--spad));
+  max-width: calc(100vw / var(--ncols) - var(--spad));
+}
+
+figure {
+  text-align: center;
+  margin: 0;
+  position: relative;
+  border: 4px solid black;
+}
+
+figure.selected {
+  border-color: red;
+}
+
+figcaption {
+  text-align: center;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  margin-bottom: 1vh;
+}
