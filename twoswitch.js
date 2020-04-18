@@ -17,7 +17,8 @@ let state = {
   reps: 0,
   nrows: 3,
   ncols: 4,
-  maxReps: 2
+  maxReps: 2,
+  ruleUsed: -1
 };
 
 /** @typedef {typeof state} State */
@@ -48,10 +49,10 @@ function highlight(r, c, s) {
  */
 
 /** @typedef {Object} Rule
- * @property {number} input
- * @property {conditionCallback} condition
- * @property {updateCallback} update
- * @property {actionCallback} [action]
+ * @property {number} input - the current input
+ * @property {conditionCallback} condition - a guard based on the state
+ * @property {updateCallback} update - returns update to the state
+ * @property {actionCallback} [action] - optional action function
  */
 
 /** @type {Rule[]} rules */
@@ -113,6 +114,16 @@ function html(strings, ...values) {
   return str;
 }
 
+/** format function string
+ * @param {function} f */
+function func(f) {
+  let r = f.toString();
+  r = r.replace(/^.*=>/, "");
+  r = r.replace(/s\./g, "");
+  r = r.replace(/\(\{|\}\)|\{|\}/g, "");
+  return r;
+}
+
 /** @typedef {typeof state} Props */
 
 const app = new Reef("#app", {
@@ -120,21 +131,22 @@ const app = new Reef("#app", {
   /** @param {Props} props */
   template: props => {
     // display the state
-    let h = "";
+    let hstate = "";
     for (const name in props) {
-      h += html`
+      hstate += html`
         <li>
           ${name}: ${props[name]}
         </li>
       `;
     }
-    h = html`
+    hstate = html`
       <ul>
-        ${h}
+        ${hstate}
       </ul>
     `;
+
     // draw the grid
-    let rows = "";
+    let hgrid = "";
     for (let r = 1; r <= props.nrows; r++) {
       let columns = "";
       for (let c = 1; c <= props.ncols; c++) {
@@ -143,21 +155,66 @@ const app = new Reef("#app", {
           <td class="${cls}">${r},${c}</td>
         `;
       }
-      rows += html`
+      hgrid += html`
         <tr>
           ${columns}
         </tr>
       `;
     }
-    return html`
-      ${h}
-      <hr />
-      <table border="1">
+    hgrid = html`
+      <table border="1" class="grid">
         <tbody>
-          ${rows}
+          ${hgrid}
         </tbody>
       </table>
     `;
+
+    // display the rules
+    let hrules = "";
+    rules.forEach((rule, i) => {
+      let cls = "";
+      if (i == props.ruleUsed) {
+        cls = 'class="used"';
+      }
+      hrules += html`
+        <tr ${cls}>
+          <td>${rule.input}</td>
+          <td>${func(rule.condition)}</td>
+          <td>${func(rule.update)}</td>
+          <td>${(rule.action && func(rule.action)) || ""}</td>
+        </tr>
+      `;
+    });
+    hrules = html`
+      <table border="1" class="rules">
+        <thead>
+          <tr>
+            <th>Input</th>
+            <th>Condition</th>
+            <th>Update</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${hrules}
+        </tbody>
+      </table>
+    `;
+    let result = html`
+      <div style="display: flex">
+        <div>
+          <h2>State</h2>
+          ${hstate}
+        </div>
+        <div>
+          <h2>Grid</h2>
+          ${hgrid}
+        </div>
+      </div>
+      <h1>Rules</h1>
+      ${hrules}
+    `;
+    return result;
   }
 });
 
@@ -174,10 +231,12 @@ document.addEventListener("keydown", e => {
     input = 1;
   }
   if (input !== null) {
-    for (const rule of rules) {
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
       if (rule.input == input && rule.condition(data)) {
         const update = rule.update(data);
         rule.action && rule.action(data);
+        update.ruleUsed = i;
         app.setData(update);
         console.log("update", update);
         break;
