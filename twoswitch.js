@@ -1,13 +1,7 @@
-function highlightRow(r) {
-  console.log("hi", r);
-}
-
-function previewCell(r, c) {
-  console.log("pre", r, c);
-}
-
 function play(r, c) {
   console.log("play", r, c);
+  const data = app.getData();
+  app.setData({ _outputs: [...data._outputs, `${r},${c}`] });
 }
 
 let state = {
@@ -18,7 +12,8 @@ let state = {
   nrows: 3,
   ncols: 4,
   maxReps: 2,
-  ruleUsed: -1
+  _ruleUsed: -1,
+  _outputs: []
 };
 
 /** @typedef {typeof state} State */
@@ -133,11 +128,13 @@ const app = new Reef("#app", {
     // display the state
     let hstate = "";
     for (const name in props) {
-      hstate += html`
-        <li>
-          ${name}: ${props[name]}
-        </li>
-      `;
+      if (!name.startsWith("_")) {
+        hstate += html`
+          <li>
+            ${name}: ${props[name]}
+          </li>
+        `;
+      }
     }
     hstate = html`
       <ul>
@@ -173,7 +170,7 @@ const app = new Reef("#app", {
     let hrules = "";
     rules.forEach((rule, i) => {
       let cls = "";
-      if (i == props.ruleUsed) {
+      if (i == props._ruleUsed) {
         cls = 'class="used"';
       }
       hrules += html`
@@ -200,6 +197,17 @@ const app = new Reef("#app", {
         </tbody>
       </table>
     `;
+    let houtput = "";
+    for (const output of props._outputs) {
+      houtput += html`
+        <li>${output}</li>
+      `;
+    }
+    houtput = html`
+      <ul>
+        ${houtput}
+      </ul>
+    `;
     let result = html`
       <div style="display: flex">
         <div>
@@ -209,6 +217,10 @@ const app = new Reef("#app", {
         <div>
           <h2>Grid</h2>
           ${hgrid}
+        </div>
+        <div>
+          <h2>Output</h2>
+          ${houtput}
         </div>
       </div>
       <h1>Rules</h1>
@@ -236,9 +248,8 @@ document.addEventListener("keydown", e => {
       if (rule.input == input && rule.condition(data)) {
         const update = rule.update(data);
         rule.action && rule.action(data);
-        update.ruleUsed = i;
+        update._ruleUsed = i;
         app.setData(update);
-        console.log("update", update);
         break;
       }
     }
