@@ -1,3 +1,17 @@
+html {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+/**
+ * Add box sizing to everything
+ * @link http://www.paulirish.com/2012/box-sizing-border-box-ftw/
+ */
+
 body {
   --nrows: 4;
   --ncols: 3;
@@ -13,6 +27,7 @@ body {
   display: flex;
   overflow-x: hidden;
   overflow-y: hidden;
+  overscroll-behavior-x: none;
 }
 
 .page {
@@ -24,7 +39,7 @@ body {
 }
 
 .symbol {
-  padding: 1vw;
+  padding: 0.5vmin;
   align-self: center;
   justify-self: center;
   background: white;
