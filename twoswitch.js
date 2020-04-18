@@ -20,6 +20,8 @@ let state = {
   maxReps: 2
 };
 
+/** @typedef {typeof state} State */
+
 /** determine the highlight
  * @param {number} r
  * @param {number} c
@@ -31,8 +33,6 @@ function highlight(r, c, s) {
     "";
   return result;
 }
-
-/** @typedef {typeof state} State */
 
 /** @callback conditionCallback
  * @param {State} s
@@ -51,7 +51,7 @@ function highlight(r, c, s) {
  * @property {number} input
  * @property {conditionCallback} condition
  * @property {updateCallback} update
- * @property {actionCallback} action
+ * @property {actionCallback} [action]
  */
 
 /** @type {Rule[]} rules */
@@ -59,38 +59,32 @@ let rules = [
   {
     input: 0,
     condition: s => s.level == 1 && s.row < s.nrows,
-    update: s => ({ row: s.row + 1 }),
-    action: () => {}
+    update: s => ({ row: s.row + 1 })
   },
   {
     input: 0,
     condition: s => s.level == 1 && s.row == s.nrows,
-    update: () => ({ row: 1 }),
-    action: () => {}
+    update: () => ({ row: 1 })
   },
   {
     input: 1,
     condition: s => s.level == 1,
-    update: () => ({ level: 2, col: 1, reps: 1 }),
-    action: () => {}
+    update: () => ({ level: 2, col: 1, reps: 1 })
   },
   {
     input: 0,
     condition: s => s.level == 2 && s.col < s.ncols,
-    update: s => ({ col: s.col + 1 }),
-    action: () => {}
+    update: s => ({ col: s.col + 1 })
   },
   {
     input: 0,
     condition: s => s.level == 2 && s.col == s.ncols && s.reps < s.maxReps,
-    update: s => ({ col: 1, reps: s.reps + 1 }),
-    action: () => {}
+    update: s => ({ col: 1, reps: s.reps + 1 })
   },
   {
     input: 0,
     condition: s => s.level == 2 && s.col == s.ncols && s.reps == s.maxReps,
-    update: () => ({ level: 1 }),
-    action: () => {}
+    update: () => ({ level: 1 })
   },
   {
     input: 1,
@@ -127,9 +121,11 @@ const app = new Reef("#app", {
   template: props => {
     // display the state
     let h = "";
-    for (const state in props) {
+    for (const name in props) {
       h += html`
-        <li>${state}: ${props[state]}</li>
+        <li>
+          ${name}: ${props[name]}
+        </li>
       `;
     }
     h = html`
@@ -181,7 +177,7 @@ document.addEventListener("keydown", e => {
     for (const rule of rules) {
       if (rule.input == input && rule.condition(data)) {
         const update = rule.update(data);
-        rule.action(data);
+        rule.action && rule.action(data);
         app.setData(update);
         console.log("update", update);
         break;
