@@ -119,29 +119,86 @@ function func(f) {
   return r;
 }
 
-/** @typedef {typeof state} Props */
-
 const app = new Reef("#app", {
   data: state,
-  /** @param {Props} props */
+  /** @param {State} props */
+  template: props => {
+    let result = html`
+      <div style="display: flex">
+        <div>
+          <h2>State</h2>
+          <div id="state"></div>
+        </div>
+        <div>
+          <h2>Grid</h2>
+          <div id="grid"></div>
+        </div>
+        <div>
+          <h2>Output</h2>
+          <div id="output"></div>
+        </div>
+      </div>
+      <h1>Rules</h1>
+      <div id="rules"></div>
+    `;
+    return result;
+  }
+});
+
+new Reef("#state", {
+  data: app.data,
+  /** @param {State} props */
   template: props => {
     // display the state
     let hstate = "";
     for (const name in props) {
       if (!name.startsWith("_")) {
         hstate += html`
-          <li>
-            ${name}: ${props[name]}
-          </li>
+          <tr>
+            <td>
+              <label for="${name}">${name}</label>
+            </td>
+            <td>
+              <input
+                type="number"
+                name="${name}"
+                id="${name}"
+                value="${props[name]}"
+              />
+            </td>
+          </tr>
         `;
       }
     }
     hstate = html`
-      <ul>
-        ${hstate}
-      </ul>
+      <table>
+        <tbody>
+          ${hstate}
+        </tbody>
+      </table>
     `;
+    return hstate;
+  },
+  attachTo: [app]
+});
 
+document.addEventListener("change", e => {
+  console.log("change", e);
+  if (
+    e.target instanceof HTMLInputElement &&
+    e.target.matches("input[type=number]")
+  ) {
+    const name = e.target.name;
+    let update = {};
+    update[name] = parseInt(e.target.value);
+    app.setData(update);
+  }
+});
+
+new Reef("#grid", {
+  data: app.data,
+  /** @param {State} props */
+  template: props => {
     // draw the grid
     let hgrid = "";
     for (let r = 1; r <= props.nrows; r++) {
@@ -165,7 +222,35 @@ const app = new Reef("#app", {
         </tbody>
       </table>
     `;
+    return hgrid;
+  },
+  attachTo: [app]
+});
 
+new Reef("#output", {
+  data: app.data,
+  /** @param {State} props */
+  template: props => {
+    let houtput = "";
+    for (const output of props._outputs) {
+      houtput += html`
+        <li>${output}</li>
+      `;
+    }
+    houtput = html`
+      <ul>
+        ${houtput}
+      </ul>
+    `;
+    return houtput;
+  },
+  attachTo: [app]
+});
+
+new Reef("#rules", {
+  data: app.data,
+  /** @param {State} props */
+  template: props => {
     // display the rules
     let hrules = "";
     rules.forEach((rule, i) => {
@@ -197,37 +282,9 @@ const app = new Reef("#app", {
         </tbody>
       </table>
     `;
-    let houtput = "";
-    for (const output of props._outputs) {
-      houtput += html`
-        <li>${output}</li>
-      `;
-    }
-    houtput = html`
-      <ul>
-        ${houtput}
-      </ul>
-    `;
-    let result = html`
-      <div style="display: flex">
-        <div>
-          <h2>State</h2>
-          ${hstate}
-        </div>
-        <div>
-          <h2>Grid</h2>
-          ${hgrid}
-        </div>
-        <div>
-          <h2>Output</h2>
-          ${houtput}
-        </div>
-      </div>
-      <h1>Rules</h1>
-      ${hrules}
-    `;
-    return result;
-  }
+    return hrules;
+  },
+  attachTo: [app]
 });
 
 window.addEventListener("load", () => app.render());
